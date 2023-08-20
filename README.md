@@ -1,24 +1,104 @@
-# This is EAI Assignment @ IUB MSCS
-# Part 1: Raichu
-Raichu is a turn-taking game of 2 players. Minimax algorithm is applied with Alpha beta pruning. 
-###### Mathematical abstraction:
-The board is represented as a string with '.' for empty spaces and a fixed letter for each piece (ex: b for black picchu)
-**Set of states:**
-All the positions of pieces on the board.
-**Successor function:
-**
-Given a player, white or black, All possible moves of black piece according to the rules given are successors.
-**Goal State:**
-Jump over all opponents pieces and kill them. No other color pieces present on board. 
+# a1-forrelease
 
-**Implementation:**
-It is not possible to go until terminal states in min max tree within 10seconds timelimit. So, We are doing iterative deepening minimax search. So, Within 10min, Program runs for depth of 1 and yields result, next runs for depth 2 and so on until timelimit is hit. 
+PART - 1 
 
-**Evaluation function:**
-Assigned weight of 1 to picchu as picchu can move in length of 1. 
-Assigned weight of 2 to Pikachu as Pikachu can move 2 length moves.
-Assigned weight of N to Raichu can move in any direction and max length of N. 
+# Solver2021:
 
-**Additional heuristic or thoughts**
-Thought of adding weight to move towards end of board but after testing with other players decided to remove it. Moving towards end makes a piece raichu and that is favourable. But In trying to become raichu, It is not killing other pieces.
-shuffle. the successors inorder to add randomness and thought that would make alpha beta pruning better, pruning more nodes. But, We did not see much improvement in pruning. We have changed our successors to return foreward moving successors as left nodes of minimax. Intution was that foreward moves are better hence that would lead to better pruning.It worked. 
+For the puzzle 2021, it has 25 tiles. The rotations that can be made, are R1..5,L1..5,U1..5,D1..5,Icc,Ic,Occ,Oc total 24 moves. Then the successors that can generate from a given state are 24. 
+
+For the Cost function f(x) = g(x) + h(x), where g(x) is the direction in which it is going, increamented by 1
+h(x) is heuristic function, which is Manhattan Distance which checks the each tile position.
+
+We have tried Number of Misplaced tiles, which is not admissible as well as not consistent. So Manhattan distance is admissible, without considering the rotations. But when we considered rotations, it is no more admissible. But it gives the sub-optimal solutions.
+
+
+Rotations:
+   - The L1 ( left rotation of a particular row is cyclic)
+   - Similar with R1
+   - Outer ring Clock-wise, a tile present in the board is shifted clock or anti-clock-wise
+   - Similar with Inner ring
+
+Implemented A*,
+   -insert the s into Closed
+   - repeat for every state in successors
+   -     -s' in closed, skip the s'
+         -s' in fringe with larger cost, then remove from fringe
+         -s' not in fringe insert into fringe.
+      
+Storing into the fringe, used heapqueue for sorting it. The heapq inserts new state into the respective order of the cost. Popping the state with lowest cost function(Fx) which is best state among the others, by considering both g(x) and h(x). and storing the path( rotations made to the board) into the fringe as well.
+
+fringe->(fx,state,path)
+
+Making the heuristic admissible, is dividing the max tiles rotated for the particular rotation. L,R - 5  Ic,Icc-8 and Occ,Oc - 16. dividing the manhattan distance got from the generated successor with its rotation cost. 
+
+pop the current state from the fringe, store the cost,path as values in the state key by using Dict
+store the current state into closed list as well
+
+check if initial_board is the Goal_state, if so return path
+
+If a state is to be inserted into fringe,
+      
+      - generate the successors for the curr_state
+            -repeat:
+               -- it needs to check if it reached goal, then return path + current_move
+               -- checking if curr_state in fringe, if so discard
+               -- check in the fringe dict, if the state exists, if so, having less cost, remove the old state and update the fringe dict with less cost for the same state
+               -- if state not in fringe dict, insert into fringe as well as fringe_dict
+ 
+Challenges:
+Designing the right heuristic which is admissible as well as consistent. Explored more heuristics that have used in similar puzzles. Tried to make the heuristic admissible. But we restricted the state space and got the solution to find the list of rotations to get the goal state.
+
+Then John Holt, has come up with the Heuristic design, where the equation C = 16x + 8y + 5z, which are the moves that solves manhattan_dist // 16,8,5 which are max tiles rotation for the particular rotation. example manhattan dist=27, it checks for the nearest number, so that it can divide manhattan dist, by max tile movement. (0,0,2) and (1,0,2). By considering min sum of these will be 3. Then divide the manhattan by min_xyz. Which is always less than or equal to the true cost. Which is admissible and consistent. But when coming to practical implementation, which gives the solution but not the correct one.
+
+Questions:
+
+1. Branching Factor: The branching factor for the search tree is, the successors(childs) generated by the successor function will be 24, which are rotations generated for a board.
+2. The successors or rotations that can be generated for this puzzle using BFS is 24 ^ 7, where 24 is the total successors that can be generated, and depth is 7 (b^d)
+
+
+PART - 2
+
+(1) Preliminary Information:
+
+   - State Space: {All states such that there is a current city location that is reachable from the start city by some set of roads}
+   - In the format f(x) = g(x) + h(x), my cost functions f and heuristics h were:
+      - Cost Function 1 (Segments) = (total segments traveled so far) + (Euclidean distance from current position to goal state)/(maximum possible segment length)
+      - Cost Function 2 (Distance) = (total distance traveled so far) + (Euclidean distance from current position to goal state)
+      - Cost Function 3 (Time) = (total time traveled so far) + (Euclidean distance from current position to goal state)/(maximum possible speed limit)
+      - Cost Function 4 (Delivery) = (total delivery time traveled so far) + (Euclidean distance from current position to goal state)/(maximum possible speed limit)
+   - Since the euclidean distance between any two points in the shortest possible distance, heuristic 2 is less than or equal to the actual distance remaining. Additionally, since the fewest segments on that route would be the shorted possible distance divided by the largest segment possible from out dataset, heuristic 1 must be less than or equal to the true number of segments remaining. Similarly, since the quickest possible time between two points is the shortest distance divided by the maximum speed in our dataset, heuristic 3 and 4 must be less than or equal to the remaining time to the goal. Thus, all 4 heuristics are admissible.
+   - Successor Function: searches the road list for matches with the current location to consider all possible next locations (connected by a road) and generates a new state for the fringe if the new state does not visit any place twice and is the lowest-cost option to get to the next location in question.
+   - Edge Weights: if our cost is segments, edge weight is always 1. For distance, edge weight is the length of the road represented by the edge. If our cost is time, the edge weight is the time to drive that road segment. If our cost is delivery, the edge weight is the delivery time on the road, established by the problem to add a bit of extra time to account for the possibility that a package may fall off on faster roads.
+   - Goal State: {State with path from start to end with minimal cost}
+
+
+(2) Code Description:
+
+   - This code converts "road-segments.txt" and "city-gps.txt" to lists and uses a function called euclidean to determine the straight line distance from any given city to the goal city in miles. The states are lists of length 6, and the structure of the state is: 
+   
+         {state = [fx, current location, distance so far, time so far, delivery time so far, [route so far]]} 
+
+   - From the initial state, the program checks for the goal state, runs the successor function, and then chooses the next state from the fringe with minimum estimated cost. If the cost of interest is segments, distance, time, or delivery, the program estimates the cost function 1, 2, 3, or 4, respectively. It stores the relevant data in the state list prior to adding each new state to the fringe. The code uses search algorithm #2.
+   
+(3) Assumptions, Challenges, & Design Choices
+
+   - The problem we encountered with search algorithm #3 was that the datasets are highly flawed. Some cities have gps coordinates and connecting roads that are not possible, such as Augusta, GA, and Gracewood, GA, which have a road distance of 4 miles and a Euclidean distance (calculated by gps coordinates) of over 137 miles. Additionally, city coordinates appeared to be focused on the city-center, while roads leading to them appeared to stop short of the center. This made consistency very challenging.
+   - Instead, we used search algorithm #2, limiting the state space contextually. For instance, we assumed that no single trip would need to visit the same location twice. Additionally, we assumed that if we arrived at a location multiple times during our search, only the time with the minimum cost value could possibly be on the optimal solution to the goal state. These two assumptions greatly limited the state space and made search algorithm #2 viable. We maintain that this is not technically search algorithm #3, as previously explored nodes can still be expanded if they have a lower cost value that prior visits to that node.
+   - Prior iterations of this program included versions with a separate successor definition, but the runtime for repeatedly passing large lists through the function’s arguments appeared to slow down the program. Another version included breaking apart the cities and roads by state, to give a smaller set of options to search through given any current city. This also increased runtime noticeably and was discarded. To account for impossible routes, such as trips to or from Newfoundland, we added in a return option with an empty set of directions and infinite costs when possible.
+
+
+PART - 3
+
+State Space: {All states such that, it contains all the students in array groups of max length 3}
+Cost Function: (No. of Groups * 5) + (No. of people who did not get the requested number of       teammates * 2) + (No. of People who got “not to work with” teammates * 10) + (No. of people who did not get the person they requested * 3)
+Goal State: {State With lowest Cost}
+
+
+Code Description:
+
+   In this code, we have a cost function called as get_cost which will get cost of the array of arrays of people. Then we have a function to get the new output. For this, if two persons want each other, then I am definitely putting them together since that is the least possible cost as it would not affect any of the four conditions that we have for the cost. Then, I am actively trying to avoid putting who don’t want each other together. This is not true in all cases but in majority of the cases, if two people do not want to be together, then I am not putting them together. And the size of the array and people in it would be completely random. After creating a complete array, I am checking it’s cost and if it is the least until now, then I am yielding it.
+
+Assumptions & Challenges:
+
+  We have tried different methods for creating the array. First, we have just put the arrays entirely random and tried to get the least cost. It passed all the test cases given but still we tried to make it less random by putting conditions like if two people want each other, then put them together and others like that.
+  Then, we tried to take a random person and generate successor functions based on the cost and tried to get the best possible solution but that took a long time to get the result and the result that we are getting in timeout is not correct. So, we reverted back to the one with less randomness.
